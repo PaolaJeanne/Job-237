@@ -209,3 +209,5 @@ Le jour du passage en production :
 
 Note : gunicorn est dans `backend/requirements-prod.txt` (utilisé uniquement
 par l'image Docker) car il ne s'installe pas sous Windows.
+#   J o b - 2 3 7  
+ 
