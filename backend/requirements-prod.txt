@@ -1,0 +1,5 @@
+# Dépendances de production uniquement (utilisées par le Dockerfile backend).
+# Ne pas utiliser pour l'installation locale sur Windows : gunicorn ne
+# s'installe pas sous Windows.
+-r requirements.txt
+gunicorn==26.0.0

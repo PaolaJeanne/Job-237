@@ -1,0 +1,65 @@
+# ============================================================================
+#  STACK PRODUCTION / POSTGRES  —  DESACTIVEE PAR DEFAUT
+# ============================================================================
+#  En local, le projet tourne sur SQLite (backend/job237/settings.py avec
+#  DJANGO_USE_POSTGRES=False). Ne pas lancer `docker compose up` tant que
+#  vous n'etes pas pret a utiliser PostgreSQL.
+#
+#  Activation le jour du passage en production :
+#    1. Dans le .env de production :
+#         DJANGO_USE_POSTGRES=True
+#         POSTGRES_DB / POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_HOST=db
+#         DJANGO_ENV=production
+#         DJANGO_DEBUG=False
+#         DJANGO_SECRET_KEY=<vraie valeur>
+#         DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,backend
+#         EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+#         (+ EMAIL_HOST / EMAIL_PORT / EMAIL_HOST_USER / EMAIL_HOST_PASSWORD)
+#    2. docker compose up -d --build
+#
+#  L'image backend (backend/Dockerfile) fait les migrations, collectstatic
+#  puis demarre gunicorn. Les fichiers media/ et statiques sont monte en
+#  volumes pour ne pas etre perdus entre deux rebuilds.
+# ============================================================================
+
+# services:
+#   db:
+#     image: postgres:16-alpine
+#     container_name: job237_db
+#     restart: unless-stopped
+#     ports:
+#       - "5432:5432"
+#     environment:
+#       POSTGRES_DB: ${POSTGRES_DB:-job237}
+#       POSTGRES_USER: ${POSTGRES_USER:-job237}
+#       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-job237_secret}
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-job237}"]
+#       interval: 5s
+#       timeout: 5s
+#       retries: 5
+#
+#   backend:
+#     build: ./backend
+#     container_name: job237_backend
+#     restart: unless-stopped
+#     depends_on:
+#       db:
+#         condition: service_healthy
+#     env_file: .env
+#     environment:
+#       DJANGO_USE_POSTGRES: "True"
+#     volumes:
+#       - ./backend/media:/app/media
+#       - ./backend/static_collected:/app/static_collected
+#     ports:
+#       - "8000:8000"
+#     command: >
+#       sh -c "python manage.py migrate &&
+#              python manage.py collectstatic --noinput &&
+#              gunicorn job237.wsgi:application --bind 0.0.0.0:8000 --workers 3"
+#
+# volumes:
+#   postgres_data:
